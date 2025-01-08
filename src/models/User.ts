@@ -16,7 +16,7 @@ export class UserService {
 
   public static mockUser: User = {
     id: '1',
-    pin: '$2b$10$YourHashedPinHere', // PIN: 1234
+    pin: '$2b$10$ZoLzTGVR/.YJ47uolVaFJ.iKAkTt9O0nQtPBfl0zBKE.0ULysTP6e', // PIN: 1234
     balance: 1000,
     savingsBalance: 0,
     savingsRate: 0.02,
