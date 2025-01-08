@@ -153,6 +153,89 @@ Statut: ${status}
             console.log("----------------------------------------");
           },
         },
+        {
+          title: "Compte épargne",
+          value: "savings",
+          action: async () => {
+            const savingsMenu = new CLI([
+              {
+                title: "Transférer vers l'épargne",
+                value: "deposit",
+                action: async () => {
+                  const amount = await CLI.askValue("Montant à transférer vers l'épargne:", "number");
+
+                  if (amount === undefined) {
+                    console.log("Opération annulée");
+                    return;
+                  }
+
+                  const transaction = await BankService.transferToSavings(
+                    amount,
+                    UserService.mockUser.balance,
+                    UserService.mockUser.savingsBalance
+                  );
+
+                  if (transaction.success) {
+                    console.log(`Transfert de ${amount}€ vers l'épargne effectué avec succès.`);
+                    console.log(`Nouveau solde compte courant: ${transaction.balanceAfter}€`);
+                    console.log(`Nouveau solde compte épargne: ${transaction.savingsBalanceAfter}€`);
+                    console.log(`Taux d'intérêt annuel: ${UserService.mockUser.savingsRate * 100}%`);
+                  } else {
+                    if (!Number.isInteger(amount) || amount <= 0) {
+                      console.log("Le montant doit être un nombre entier positif.");
+                    } else {
+                      console.log("Transfert impossible : fonds insuffisants sur le compte courant.");
+                    }
+                  }
+                }
+              },
+              {
+                title: "Retirer de l'épargne",
+                value: "withdraw",
+                action: async () => {
+                  const amount = await CLI.askValue("Montant à retirer de l'épargne:", "number");
+
+                  if (amount === undefined) {
+                    console.log("Opération annulée");
+                    return;
+                  }
+
+                  const transaction = await BankService.transferFromSavings(
+                    amount,
+                    UserService.mockUser.balance,
+                    UserService.mockUser.savingsBalance
+                  );
+
+                  if (transaction.success) {
+                    console.log(`Retrait de ${amount}€ de l'épargne effectué avec succès.`);
+                    console.log(`Nouveau solde compte courant: ${transaction.balanceAfter}€`);
+                    console.log(`Nouveau solde compte épargne: ${transaction.savingsBalanceAfter}€`);
+                  } else {
+                    if (!Number.isInteger(amount) || amount <= 0) {
+                      console.log("Le montant doit être un nombre entier positif.");
+                    } else {
+                      console.log("Retrait impossible : fonds insuffisants sur le compte épargne.");
+                    }
+                  }
+                }
+              },
+              {
+                title: "Voir les soldes",
+                value: "balance",
+                action: () => {
+                  console.log("\nInformations des comptes :");
+                  console.log("----------------------------------------");
+                  console.log(`Solde compte courant : ${UserService.mockUser.balance}€`);
+                  console.log(`Solde compte épargne : ${UserService.mockUser.savingsBalance}€`);
+                  console.log(`Taux d'intérêt annuel : ${UserService.mockUser.savingsRate * 100}%`);
+                  console.log("----------------------------------------");
+                }
+              }
+            ]);
+
+            await savingsMenu.menu();
+          }
+        },
       ]);
 
       cli.menu();

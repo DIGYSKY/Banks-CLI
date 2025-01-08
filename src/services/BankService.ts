@@ -3,9 +3,10 @@ import { UserService } from '../models/User';
 
 export interface Transaction {
   date: Date;
-  type: 'deposit' | 'withdrawal';
+  type: 'deposit' | 'withdrawal' | 'savings_deposit' | 'savings_withdrawal';
   amount: number;
   balanceAfter: number;
+  savingsBalanceAfter?: number;
   success: boolean;
 }
 
@@ -79,6 +80,87 @@ export class BankService {
 
     await this.saveTransaction(transaction);
     await UserService.updateUser({ balance: newBalance });
+    return transaction;
+  }
+
+  static async transferToSavings(amount: number, currentBalance: number, currentSavingsBalance: number): Promise<Transaction> {
+    if (amount <= 0 || !Number.isInteger(amount)) {
+      const transaction = {
+        date: new Date(),
+        type: 'savings_deposit' as const,
+        amount,
+        balanceAfter: currentBalance,
+        savingsBalanceAfter: currentSavingsBalance,
+        success: false
+      };
+      await this.saveTransaction(transaction);
+      return transaction;
+    }
+
+    if (currentBalance - amount < -UserService.mockUser.overdraftLimit) {
+      const transaction = {
+        date: new Date(),
+        type: 'savings_deposit' as const,
+        amount,
+        balanceAfter: currentBalance,
+        savingsBalanceAfter: currentSavingsBalance,
+        success: false
+      };
+      await this.saveTransaction(transaction);
+      return transaction;
+    }
+
+    const newBalance = currentBalance - amount;
+    const newSavingsBalance = currentSavingsBalance + amount;
+
+    const transaction = {
+      date: new Date(),
+      type: 'savings_deposit' as const,
+      amount,
+      balanceAfter: newBalance,
+      savingsBalanceAfter: newSavingsBalance,
+      success: true
+    };
+
+    await this.saveTransaction(transaction);
+    await UserService.updateUser({
+      balance: newBalance,
+      savingsBalance: newSavingsBalance
+    });
+    return transaction;
+  }
+
+  static async transferFromSavings(amount: number, currentBalance: number, currentSavingsBalance: number): Promise<Transaction> {
+    if (amount <= 0 || !Number.isInteger(amount) || amount > currentSavingsBalance) {
+      const transaction = {
+        date: new Date(),
+        type: 'savings_withdrawal' as const,
+        amount,
+        balanceAfter: currentBalance,
+        savingsBalanceAfter: currentSavingsBalance,
+        success: false
+      };
+      await this.saveTransaction(transaction);
+      return transaction;
+    }
+
+    const newBalance = currentBalance + amount;
+    const newSavingsBalance = currentSavingsBalance - amount;
+
+    const transaction = {
+      date: new Date(),
+      type: 'savings_withdrawal' as const,
+      amount,
+      balanceAfter: newBalance,
+      savingsBalanceAfter: newSavingsBalance,
+      success: true
+    };
+
+    await this.saveTransaction(transaction);
+    await UserService.updateUser({
+      balance: newBalance,
+      savingsBalance: newSavingsBalance
+    });
     return transaction;
   }
 

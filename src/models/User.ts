@@ -5,6 +5,8 @@ export interface User {
   id: string;
   pin: string;
   balance: number;
+  savingsBalance: number;
+  savingsRate: number;
   failedAttempts: number;
   overdraftLimit: number;
 }
@@ -16,6 +18,8 @@ export class UserService {
     id: '1',
     pin: '$2b$10$YourHashedPinHere', // PIN: 1234
     balance: 1000,
+    savingsBalance: 0,
+    savingsRate: 0.02,
     failedAttempts: 0,
     overdraftLimit: 100
   };
